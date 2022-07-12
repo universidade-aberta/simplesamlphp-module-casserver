@@ -38,7 +38,7 @@ class Url
      * @param array $legal_service_urls
      * @return bool
      */
-    function checkServiceURL(string $service, array $legal_service_urls): bool
+    public function checkServiceURL(string $service, array $legal_service_urls): bool
     {
         //delegate to ServiceValidator until all references to this can be cleaned up
         $config = Configuration::loadFromArray(['legal_service_urls' => $legal_service_urls]);
@@ -51,7 +51,7 @@ class Url
      * @param string $parameter
      * @return string
      */
-    function sanitize(string $parameter): string
+    public function sanitize(string $parameter): string
     {
         return TicketValidator::sanitize($parameter);
     }

@@ -8,7 +8,7 @@ use Exception;
 use SimpleSAML\Configuration;
 use SimpleSAML\Logger;
 use SimpleSAML\Module;
-use SimpleSAML\Module\casserver\Utils\Url;
+use SimpleSAML\Module\casserver\Utils\Url as UrlUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -49,9 +49,9 @@ class Cas10
 
     /**
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @return \SimpleSAML\XHTML\Template
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function validate(Request $request): Template
+    public function validate(Request $request): StreamedResponse
     {
         /* Load simpleSAMLphp, configuration and metadata */
         $casconfig = Configuration::getConfig('module_casserver.php');
@@ -97,7 +97,7 @@ class Cas10
                         (!$forceAuthn || $serviceTicket['forceAuthn']) &&
                         array_key_exists($usernameField, $serviceTicket['attributes'])
                     ) {
-                        $response->setCallback(function() {
+                        $response->setCallback(function() use ($protocol, $serviceTicket, $usernameField) {
                             echo $protocol->getValidateSuccessResponse($serviceTicket['attributes'][$usernameField][0]);
                         });
                     } else {
@@ -107,7 +107,7 @@ class Cas10
                                 var_export($usernameField, true)
                             ));
 
-                            $response->setCallback(function() {
+                            $response->setCallback(function() use ($protocol) {
                                 echo $protocol->getValidateFailureResponse();
                             });
                         } else {
@@ -124,7 +124,7 @@ class Cas10
                             }
                             Logger::debug('casserver:' . $message);
 
-                            $response->setCallback(function() {
+                            $response->setCallback(function() use ($protocol) {
                                 echo $protocol->getValidateFailureResponse();
                             });
                         }
@@ -138,14 +138,14 @@ class Cas10
 
                     Logger::debug('casserver:' . $message);
 
-                    $response->setCallback(function() {
+                    $response->setCallback(function() use ($protocol) {
                         echo $protocol->getValidateFailureResponse();
                     });
                 }
             } catch (Exception $e) {
                 Logger::error('casserver:validate: internal server error. ' . var_export($e->getMessage(), true));
 
-                $response->setCallback(function() {
+                $response->setCallback(function() use ($protocol) {
                     echo $protocol->getValidateFailureResponse();
                 });
             }
@@ -157,7 +157,7 @@ class Cas10
             }
 
             Logger::debug('casserver:' . $message);
-            $response->setCallback(function() {
+            $response->setCallback(function() use ($protocol) {
                 echo $protocol->getValidateFailureResponse();
             });
         }
